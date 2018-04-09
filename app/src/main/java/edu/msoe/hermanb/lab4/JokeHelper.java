@@ -1,7 +1,5 @@
 package edu.msoe.hermanb.lab4;
 
-import android.support.design.widget.Snackbar;
-
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -23,42 +21,64 @@ import static edu.msoe.hermanb.lab4.JokeListActivity.requestQueue;
  */
 public class JokeHelper {
 
-    /**
-     * An array of sample (dummy) items.
-     */
+    enum Endpoint{
+        TOP ("top"),
+        HOT (""),
+        NEW ("new"),
+        CONTROVERSIAL ("controversial");
+
+        private final String ep;
+        Endpoint(String ep) {
+            this.ep = ep;
+        }
+    }
+
     public static final List<JokeInfo> ITEMS = new ArrayList<>();
 
-    /**
-     * A map of sample (dummy) items, by ID.
-     */
     public static final Map<String, JokeInfo> ITEM_MAP = new HashMap<>();
+
+    private static boolean fetched = false;
 
     private static void addItem(JokeInfo item) {
         ITEMS.add(item);
         ITEM_MAP.put(item.title, item);
     }
 
-    public static void fetchJokesFromReddit(final JokeListActivity.VolleyCallback callback) {
-        String url = "https://www.reddit.com/r/jokes/top/.json";
+    public static void fetchJokesFromReddit(Endpoint endpoint, final JokeListActivity.VolleyCallback callback) {
+        if (!fetched) {
+            ITEMS.clear();
+            ITEM_MAP.clear();
 
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
-                (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+            String url = String.format("https://www.reddit.com/r/jokes/%s/.json", endpoint.ep);
 
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        handleJokesJson(response);
-                        callback.onSuccess();
-                    }
-                }, new Response.ErrorListener() {
+            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
+                    (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
 
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        callback.onFailure(error);
-                    }
-                });
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            handleJokesJson(response);
+                            fetched = true;
+                            callback.onSuccess();
+                        }
+                    }, new Response.ErrorListener() {
 
-        // Access the RequestQueue through your singleton class.
-        requestQueue.add(jsonObjectRequest);
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            fetched = false;
+                            callback.onFailure(error);
+                        }
+                    });
+
+            // Access the RequestQueue using single request queue object
+            requestQueue.add(jsonObjectRequest);
+        }
+        else { // Already loaded
+            callback.onSuccess();
+        }
+    }
+
+    public static void forceFetchOnNextAttempt() {
+        fetched = false;
     }
 
     private static void handleJokesJson(JSONObject jokeResponse){
@@ -67,7 +87,7 @@ public class JokeHelper {
 
             for (int i = 0; i < data.length(); i++) {
                 JSONObject currentJoke = data.getJSONObject(i).getJSONObject("data");
-                JokeInfo tempJoke = new JokeInfo(currentJoke.getString("title"), currentJoke.getString("selftext"));
+                JokeInfo tempJoke = new JokeInfo(currentJoke.getString("title"), currentJoke.getString("selftext"), currentJoke.getInt("ups"));
                 addItem(tempJoke);
             }
         } catch (JSONException e) {
@@ -75,16 +95,15 @@ public class JokeHelper {
         }
     }
 
-    /**
-     * A dummy item representing a piece of content.
-     */
     public static class JokeInfo{
         public String title;
         public String detail;
+        public int ups;
 
-        public JokeInfo(String title, String detail) {
+        public JokeInfo(String title, String detail, int ups) {
             this.title = title;
             this.detail = detail;
+            this.ups = ups;
         }
     }
 }

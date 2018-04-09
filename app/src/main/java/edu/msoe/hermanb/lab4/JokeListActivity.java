@@ -7,8 +7,6 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,12 +16,13 @@ import android.widget.TextView;
 import com.android.volley.RequestQueue;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.Volley;
+import com.getbase.floatingactionbutton.FloatingActionButton;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 
 import static edu.msoe.hermanb.lab4.JokeHelper.fetchJokesFromReddit;
+import static edu.msoe.hermanb.lab4.JokeHelper.forceFetchOnNextAttempt;
 
 /**
  * An activity representing a list of Jokes. This activity
@@ -53,12 +52,91 @@ public class JokeListActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         toolbar.setTitle(getTitle());
 
-        FloatingActionButton fab = findViewById(R.id.fab);
+        FloatingActionButton fab = findViewById(R.id.new_fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                forceFetchOnNextAttempt();
+                fetchJokesFromReddit(JokeHelper.Endpoint.NEW, new VolleyCallback() {
+                    @Override
+                    public void onSuccess() {
+                        // Done loading and handling jokes
+                        View recyclerView = findViewById(R.id.joke_list);
+                        assert recyclerView != null;
+                        setupRecyclerView((RecyclerView) recyclerView);
+                    }
+
+                    @Override
+                    public void onFailure(VolleyError error){
+
+                    }
+                });
+            }
+        });
+
+        FloatingActionButton top = findViewById(R.id.top_fab);
+        top.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                forceFetchOnNextAttempt();
+                fetchJokesFromReddit(JokeHelper.Endpoint.TOP, new VolleyCallback() {
+                    @Override
+                    public void onSuccess() {
+                        // Done loading and handling jokes
+                        View recyclerView = findViewById(R.id.joke_list);
+                        assert recyclerView != null;
+                        setupRecyclerView((RecyclerView) recyclerView);
+                    }
+
+                    @Override
+                    public void onFailure(VolleyError error){
+
+                    }
+                });
+            }
+        });
+
+        FloatingActionButton contra = findViewById(R.id.controversial_fab);
+        contra.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                forceFetchOnNextAttempt();
+                fetchJokesFromReddit(JokeHelper.Endpoint.CONTROVERSIAL, new VolleyCallback() {
+                    @Override
+                    public void onSuccess() {
+                        // Done loading and handling jokes
+                        View recyclerView = findViewById(R.id.joke_list);
+                        assert recyclerView != null;
+                        setupRecyclerView((RecyclerView) recyclerView);
+                    }
+
+                    @Override
+                    public void onFailure(VolleyError error){
+
+                    }
+                });
+            }
+        });
+
+        FloatingActionButton hot = findViewById(R.id.hot_fab);
+        hot.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                forceFetchOnNextAttempt();
+                fetchJokesFromReddit(JokeHelper.Endpoint.HOT, new VolleyCallback() {
+                    @Override
+                    public void onSuccess() {
+                        // Done loading and handling jokes
+                        View recyclerView = findViewById(R.id.joke_list);
+                        assert recyclerView != null;
+                        setupRecyclerView((RecyclerView) recyclerView);
+                    }
+
+                    @Override
+                    public void onFailure(VolleyError error){
+
+                    }
+                });
             }
         });
 
@@ -71,7 +149,7 @@ public class JokeListActivity extends AppCompatActivity {
             mTwoPane = true;
         }
 
-        fetchJokesFromReddit(new VolleyCallback() {
+        fetchJokesFromReddit(JokeHelper.Endpoint.TOP, new VolleyCallback() {
             @Override
             public void onSuccess() {
                 // Done loading and handling jokes
@@ -146,7 +224,7 @@ public class JokeListActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
             holder.mIdView.setText(mValues.get(position).title);
-            //holder.mContentView.setText(mValues.get(position).detail);
+            holder.mContentView.setText(String.format(Locale.ENGLISH,"Upvotes: %d", mValues.get(position).ups));
 
             holder.itemView.setTag(mValues.get(position));
             holder.itemView.setOnClickListener(mOnClickListener);
@@ -163,8 +241,8 @@ public class JokeListActivity extends AppCompatActivity {
 
             ViewHolder(View view) {
                 super(view);
-                mIdView = (TextView) view.findViewById(R.id.id_text);
-                mContentView = (TextView) view.findViewById(R.id.content);
+                mIdView = view.findViewById(R.id.id_text);
+                mContentView = view.findViewById(R.id.content);
             }
         }
     }
