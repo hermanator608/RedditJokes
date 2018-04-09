@@ -17,10 +17,13 @@ import java.util.Map;
 import static edu.msoe.hermanb.lab4.JokeListActivity.requestQueue;
 
 /**
-
+ * Class used to get jokes from reddit using Volley
  */
-public class JokeHelper {
+class JokeHelper {
 
+    /**
+     * Endpoints for www.reddit.com/r/jokes/
+     */
     enum Endpoint{
         TOP ("top"),
         HOT (""),
@@ -33,18 +36,29 @@ public class JokeHelper {
         }
     }
 
-    public static final List<JokeInfo> ITEMS = new ArrayList<>();
+    // List of Jokes
+    static final List<JokeInfo> ITEMS = new ArrayList<>();
+    // Map of jokes by joke title. Used to easily pass jokes between fragments/activities
+    static final Map<String, JokeInfo> ITEM_MAP = new HashMap<>();
 
-    public static final Map<String, JokeInfo> ITEM_MAP = new HashMap<>();
-
+    // Used to prevent fetching data multiple times
     private static boolean fetched = false;
 
+    /**
+     * Add Joke to both List and Map
+     * @param item - JokeInfo to be added
+     */
     private static void addItem(JokeInfo item) {
         ITEMS.add(item);
         ITEM_MAP.put(item.title, item);
     }
 
-    public static void fetchJokesFromReddit(Endpoint endpoint, final JokeListActivity.VolleyCallback callback) {
+    /**
+     * This method actually requests jokes from reddit
+     * @param endpoint - What endpoint to hit
+     * @param callback - Callback to be used on success/failure
+     */
+    static void fetchJokesFromReddit(Endpoint endpoint, final JokeListActivity.VolleyCallback callback) {
         if (!fetched) {
             ITEMS.clear();
             ITEM_MAP.clear();
@@ -77,10 +91,15 @@ public class JokeHelper {
         }
     }
 
-    public static void forceFetchOnNextAttempt() {
+    // Force pull nect time fetch is called
+    static void forceFetchOnNextAttempt() {
         fetched = false;
     }
 
+    /**
+     * Parse JSON from Reddit and get info we want
+     * @param jokeResponse - json from Reddit
+     */
     private static void handleJokesJson(JSONObject jokeResponse){
         try {
             JSONArray data = jokeResponse.getJSONObject("data").getJSONArray("children");
@@ -95,6 +114,9 @@ public class JokeHelper {
         }
     }
 
+    /**
+     * Class used to store title, detail, and ups for a reddit joke
+     */
     public static class JokeInfo{
         public String title;
         public String detail;

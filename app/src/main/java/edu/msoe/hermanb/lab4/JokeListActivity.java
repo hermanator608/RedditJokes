@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -11,7 +12,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
 
 import com.android.volley.RequestQueue;
 import com.android.volley.VolleyError;
@@ -39,6 +39,10 @@ public class JokeListActivity extends AppCompatActivity {
      * device.
      */
     private boolean mTwoPane;
+
+    /**
+     * Single instance of a request queue
+     */
     public static RequestQueue requestQueue;
 
     @Override
@@ -52,93 +56,20 @@ public class JokeListActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         toolbar.setTitle(getTitle());
 
+        /*
+         * Setup floating action buttons on click listeners
+         */
         FloatingActionButton fab = findViewById(R.id.new_fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                forceFetchOnNextAttempt();
-                fetchJokesFromReddit(JokeHelper.Endpoint.NEW, new VolleyCallback() {
-                    @Override
-                    public void onSuccess() {
-                        // Done loading and handling jokes
-                        View recyclerView = findViewById(R.id.joke_list);
-                        assert recyclerView != null;
-                        setupRecyclerView((RecyclerView) recyclerView);
-                    }
-
-                    @Override
-                    public void onFailure(VolleyError error){
-
-                    }
-                });
-            }
-        });
+        fab.setOnClickListener(createFabOnClickListener(JokeHelper.Endpoint.NEW));
 
         FloatingActionButton top = findViewById(R.id.top_fab);
-        top.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                forceFetchOnNextAttempt();
-                fetchJokesFromReddit(JokeHelper.Endpoint.TOP, new VolleyCallback() {
-                    @Override
-                    public void onSuccess() {
-                        // Done loading and handling jokes
-                        View recyclerView = findViewById(R.id.joke_list);
-                        assert recyclerView != null;
-                        setupRecyclerView((RecyclerView) recyclerView);
-                    }
-
-                    @Override
-                    public void onFailure(VolleyError error){
-
-                    }
-                });
-            }
-        });
+        top.setOnClickListener(createFabOnClickListener(JokeHelper.Endpoint.TOP));
 
         FloatingActionButton contra = findViewById(R.id.controversial_fab);
-        contra.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                forceFetchOnNextAttempt();
-                fetchJokesFromReddit(JokeHelper.Endpoint.CONTROVERSIAL, new VolleyCallback() {
-                    @Override
-                    public void onSuccess() {
-                        // Done loading and handling jokes
-                        View recyclerView = findViewById(R.id.joke_list);
-                        assert recyclerView != null;
-                        setupRecyclerView((RecyclerView) recyclerView);
-                    }
-
-                    @Override
-                    public void onFailure(VolleyError error){
-
-                    }
-                });
-            }
-        });
+        contra.setOnClickListener(createFabOnClickListener(JokeHelper.Endpoint.CONTROVERSIAL));
 
         FloatingActionButton hot = findViewById(R.id.hot_fab);
-        hot.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                forceFetchOnNextAttempt();
-                fetchJokesFromReddit(JokeHelper.Endpoint.HOT, new VolleyCallback() {
-                    @Override
-                    public void onSuccess() {
-                        // Done loading and handling jokes
-                        View recyclerView = findViewById(R.id.joke_list);
-                        assert recyclerView != null;
-                        setupRecyclerView((RecyclerView) recyclerView);
-                    }
-
-                    @Override
-                    public void onFailure(VolleyError error){
-
-                    }
-                });
-            }
-        });
+        hot.setOnClickListener(createFabOnClickListener(JokeHelper.Endpoint.HOT));
 
         if (findViewById(R.id.joke_detail_container) != null) {
             // The detail container view will be present only in the
@@ -149,6 +80,7 @@ public class JokeListActivity extends AppCompatActivity {
             mTwoPane = true;
         }
 
+        // Get jokes from reddit (Defauly uses top jokes endpoint)
         fetchJokesFromReddit(JokeHelper.Endpoint.TOP, new VolleyCallback() {
             @Override
             public void onSuccess() {
@@ -160,7 +92,7 @@ public class JokeListActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(VolleyError error){
-
+                Snackbar.make(findViewById(R.id.app_bar), "Error: " + error.getLocalizedMessage(), Snackbar.LENGTH_LONG);
             }
         });
 
@@ -169,15 +101,49 @@ public class JokeListActivity extends AppCompatActivity {
         setupRecyclerView((RecyclerView) recyclerView);
     }
 
+    /**
+     * Creates on click listener for FABS
+     * @param endpoint - which enpoint to hit
+     * @return onclicklsitener for the FAB
+     */
+    private View.OnClickListener createFabOnClickListener(final JokeHelper.Endpoint endpoint) {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(final View view) {
+                forceFetchOnNextAttempt();
+                fetchJokesFromReddit(endpoint, new VolleyCallback() {
+                    @Override
+                    public void onSuccess() {
+                        // Done loading and handling jokes
+                        View recyclerView = findViewById(R.id.joke_list);
+                        assert recyclerView != null;
+                        setupRecyclerView((RecyclerView) recyclerView);
+                    }
+
+                    @Override
+                    public void onFailure(VolleyError error){
+                        Snackbar.make(view, "Error: " + error.getLocalizedMessage(), Snackbar.LENGTH_LONG);
+                    }
+                });
+            }
+        };
+    }
+
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
         recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(this, JokeHelper.ITEMS, mTwoPane));
     }
 
+    /**
+     * Interface used to handle callbacks from Volley fetches
+     */
     public interface VolleyCallback{
         void onSuccess();
         void onFailure(VolleyError error);
     }
 
+    /**
+     * RecycleViewAdaptor for Jokes
+     */
     public static class SimpleItemRecyclerViewAdapter
             extends RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder> {
 
@@ -186,9 +152,9 @@ public class JokeListActivity extends AppCompatActivity {
         private final boolean mTwoPane;
         private final View.OnClickListener mOnClickListener = new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onClick(View view) { // When a joke from the list is clicked on
                 JokeHelper.JokeInfo item = (JokeHelper.JokeInfo) view.getTag();
-                if (mTwoPane) {
+                if (mTwoPane) { // If in two pane mode then create fragment
                     Bundle arguments = new Bundle();
                     arguments.putString(JokeDetailFragment.ARG_ITEM_ID, item.title);
                     JokeDetailFragment fragment = new JokeDetailFragment();
@@ -196,7 +162,7 @@ public class JokeListActivity extends AppCompatActivity {
                     mParentActivity.getSupportFragmentManager().beginTransaction()
                             .replace(R.id.joke_detail_container, fragment)
                             .commit();
-                } else {
+                } else { // Else create a new activity
                     Context context = view.getContext();
                     Intent intent = new Intent(context, JokeDetailActivity.class);
                     intent.putExtra(JokeDetailFragment.ARG_ITEM_ID, item.title);
