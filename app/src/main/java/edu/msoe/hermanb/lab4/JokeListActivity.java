@@ -52,6 +52,22 @@ public class JokeListActivity extends AppCompatActivity {
 
         requestQueue = Volley.newRequestQueue(this);
 
+        // Get jokes from reddit (Defauly uses top jokes endpoint)
+        fetchJokesFromReddit(JokeHelper.Endpoint.TOP, new VolleyCallback() {
+            @Override
+            public void onSuccess() {
+                // Done loading and handling jokes
+                View recyclerView = findViewById(R.id.joke_list);
+                assert recyclerView != null;
+                setupRecyclerView((RecyclerView) recyclerView);
+            }
+
+            @Override
+            public void onFailure(VolleyError error){
+                Snackbar.make(findViewById(R.id.app_bar), "Error: " + error.getLocalizedMessage(), Snackbar.LENGTH_LONG);
+            }
+        });
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         toolbar.setTitle(getTitle());
@@ -79,22 +95,6 @@ public class JokeListActivity extends AppCompatActivity {
             // activity should be in two-pane mode.
             mTwoPane = true;
         }
-
-        // Get jokes from reddit (Defauly uses top jokes endpoint)
-        fetchJokesFromReddit(JokeHelper.Endpoint.TOP, new VolleyCallback() {
-            @Override
-            public void onSuccess() {
-                // Done loading and handling jokes
-                View recyclerView = findViewById(R.id.joke_list);
-                assert recyclerView != null;
-                setupRecyclerView((RecyclerView) recyclerView);
-            }
-
-            @Override
-            public void onFailure(VolleyError error){
-                Snackbar.make(findViewById(R.id.app_bar), "Error: " + error.getLocalizedMessage(), Snackbar.LENGTH_LONG);
-            }
-        });
 
         View recyclerView = findViewById(R.id.joke_list);
         assert recyclerView != null;
