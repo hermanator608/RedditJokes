@@ -6,7 +6,7 @@
     android:layout_marginLeft="16dp"
     android:layout_marginRight="16dp"
     android:baselineAligned="false"
-    android:divider="?android:attr/dividerHorizontal"
+    android:divider="@color/whiteTextColor"
     android:orientation="horizontal"
     android:showDividers="middle"
     tools:context="edu.msoe.hermanb.lab4.JokeListActivity">
@@ -14,7 +14,6 @@
     <!--
     This layout is a two-pane layout for the Jokes
     master/detail flow.
-    
     -->
 
     <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"

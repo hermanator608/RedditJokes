@@ -6,12 +6,12 @@
     tools:context="edu.msoe.hermanb.lab4.JokeDetailFragment"
     android:orientation="vertical" >
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:divider="@color/whiteTextColor"
         android:showDividers="middle"
-        android:dividerHeight="1dip" >
+        android:dividerHeight="10dp" >
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
